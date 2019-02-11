@@ -7,6 +7,8 @@ function autoupdate() {
 	while true; do youtube-dl -U; sleep 500; done
 }
 
+FILTER_WORDS="s/(HD|Amazing Quality)//ig"
+
 QUEUE_SERVER=""
 #trap "tput clear; echo lol" SIGINT SIGTERM
 amqp-consume -u $QUEUE_SERVER -q skip-queue ./killer.sh &
@@ -37,7 +39,7 @@ do
 	if [[ $video != "" ]]
 	then
 		echo -e "\033[32mPlaying video $video\033[37;1m"
-		espeak -a 100 -s 120 -g 5 "`wget -q -O - https://www.youtube.com/watch?v=$video | grep 'title>' | sed 's/title>\(.*\)<\/title.*/\1/g' | tr -d '<>' | sed 's/- youtube//gi'`"
+		espeak -a 100 -s 120 -g 5 "`wget -q -O - https://www.youtube.com/watch?v=$video | grep 'title>' | sed 's/title>\(.*\)<\/title.*/\1/g' | tr -d '<>' | sed 's/- youtube//gi'` | sed '$FILTER_WORDS'"
 		youtube-dl https://www.youtube.com/watch?v=$video -o - | mbuffer -m 1024M | ffmpeg -i - -bufsize 1024M -f mp3 -ab 256000 -vn - | mpg123 - 
 		if [[ $? -eq 0 ]]
 		then

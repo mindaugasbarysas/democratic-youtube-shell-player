@@ -29,8 +29,17 @@ do
 	then
 	    espeak -a 100 -s 120 -g 5 "$bazars"
 	fi 
+	video=""
+	search=`amqp-get -u $QUEUE_SERVER -q feeling-lucky`
+	if [[ $? -eq 0 && $search != "" ]]
+	then
+	    video=`curl -s --data-urlencode "search_query=$search" "https://www.youtube.com/results" | grep -Po 'data-context-item-id="\K[^"]*' | head -n 1`
+	fi
 	echo "TIMER PID: $timer_pid"
-	video=`amqp-get -u $QUEUE_SERVER -q youtube-playlist-queue`
+	if [[ video == "" ]]
+	then
+	    video=`amqp-get -u $QUEUE_SERVER -q youtube-playlist-queue`
+	fi
 	if [[ $? -gt 0 || $video == "" ]]
 	then
 		echo -e "\033[31;1mFailed to get video from queue, falling back to idle queue\033[37;1m"
